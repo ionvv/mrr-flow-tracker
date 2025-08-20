@@ -20,6 +20,7 @@
     "build:min": "npm run clean && node esbuild.config.js",
     "clean": "rimraf dist",
     "test": "echo 'Tests temporarily skipped'",
+    "tsc": "tsc",
     "lint": "eslint src --ext .ts",
     "format": "prettier --write src/**/*.ts",
     "size": "npm run size:files && npm run size:gzip",
