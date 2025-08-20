@@ -1,0 +1,9 @@
+src/
+*.test.ts
+*.test.js
+.github/
+rollup.config.js
+rollup.browser.config.js
+tsconfig.json
+jest.config.js
+.eslintrc.js
