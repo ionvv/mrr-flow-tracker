@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>MRRFlow Tracker Test</title>
+    <style>
+        body {
+            font-family: -apple-system, BlinkMacSystemFont, sans-serif;
+            max-width: 800px;
+            margin: 50px auto;
+            padding: 20px;
+            line-height: 1.6;
+        }
+        .button {
+            background: #007AFF;
+            color: white;
+            border: none;
+            padding: 12px 24px;
+            border-radius: 8px;
+            cursor: pointer;
+            margin: 10px 10px 10px 0;
+            font-size: 16px;
+        }
+        .button:hover {
+            background: #005FCC;
+        }
+        .form-group {
+            margin: 20px 0;
+        }
+        input[type="email"] {
+            padding: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+            width: 250px;
+            margin-right: 10px;
+        }
+        .logs {
+            background: #f5f5f5;
+            padding: 20px;
+            border-radius: 8px;
+            margin-top: 30px;
+            font-family: monospace;
+            max-height: 300px;
+            overflow-y: auto;
+        }
+        .log-entry {
+            margin: 5px 0;
+            padding: 5px;
+            border-left: 3px solid #007AFF;
+            background: white;
+        }
+    </style>
+</head>
+<body>
+    <h1>MRRFlow Tracker Test Page</h1>
+    
+    <p>This page tests the MRRFlow tracker in real-time. Open browser dev tools to see events.</p>
+    
+    <h2>Test Actions</h2>
+    
+    <button class="button" id="cta-button">Call to Action</button>
+    <button class="button" id="pricing-button">View Pricing</button>
+    <button class="button" id="feature-button">Learn More</button>
+    
+    <div class="form-group">
+        <h3>Email Identification Test</h3>
+        <input type="email" id="email-input" placeholder="test@example.com">
+        <button class="button" id="identify-button">Identify User</button>
+    </div>
+    
+    <div class="form-group">
+        <h3>Form Submission Test</h3>
+        <form id="signup-form">
+            <input type="email" name="email" placeholder="Enter your email" required>
+            <button type="submit" class="button">Sign Up</button>
+        </form>
+    </div>
+    
+    <div class="form-group">
+        <h3>Custom Event Test</h3>
+        <button class="button" id="custom-event">Track Custom Event</button>
+        <button class="button" id="debug-toggle">Toggle Debug Mode</button>
+    </div>
+    
+    <div class="logs" id="logs">
+        <strong>Event Log:</strong>
+        <div id="log-entries"></div>
+    </div>
+
+    <!-- MRRFlow Tracker (Development Version) -->
+    <script data-account-id="test-account-123" src="./dist/tracker.js"></script>
+    
+    <script>
+        // Wait for tracker to load
+        setTimeout(() => {
+            // Enable debug mode
+            if (window.mrrflow) {
+                window.mrrflow.debug(true);
+            }
+            
+            // Log tracker initialization
+            addLog('🚀 MRRFlow tracker loaded and ready');
+            
+            // Test button events
+            document.getElementById('cta-button').addEventListener('click', () => {
+                window.mrrflow?.track('cta_clicked', {
+                    location: 'hero',
+                    text: 'Call to Action'
+                });
+                addLog('📊 Tracked: CTA clicked');
+            });
+            
+            document.getElementById('pricing-button').addEventListener('click', () => {
+                window.mrrflow?.track('pricing_viewed', {
+                    plan: 'pro',
+                    source: 'test_page'
+                });
+                addLog('📊 Tracked: Pricing viewed');
+            });
+            
+            document.getElementById('feature-button').addEventListener('click', () => {
+                window.mrrflow?.track('feature_interest', {
+                    feature: 'analytics',
+                    engagement_level: 'high'
+                });
+                addLog('📊 Tracked: Feature interest');
+            });
+            
+            // Email identification
+            document.getElementById('identify-button').addEventListener('click', () => {
+                const email = document.getElementById('email-input').value;
+                if (email) {
+                    window.mrrflow?.identify(email);
+                    addLog(`🆔 Identified user: ${email}`);
+                } else {
+                    addLog('⚠️ Please enter an email address');
+                }
+            });
+            
+            // Form submission
+            document.getElementById('signup-form').addEventListener('submit', (e) => {
+                e.preventDefault();
+                const email = e.target.email.value;
+                
+                // Identify and track signup
+                window.mrrflow?.identify(email);
+                window.mrrflow?.track('signup_form_submitted', {
+                    source: 'test_page',
+                    email_provided: !!email
+                });
+                
+                addLog(`📝 Form submitted with email: ${email}`);
+            });
+            
+            // Custom event
+            document.getElementById('custom-event').addEventListener('click', () => {
+                window.mrrflow?.track('custom_test_event', {
+                    timestamp: Date.now(),
+                    random_value: Math.random(),
+                    user_action: 'button_click'
+                });
+                addLog('🎯 Tracked: Custom event');
+            });
+            
+            // Debug toggle
+            let debugEnabled = true;
+            document.getElementById('debug-toggle').addEventListener('click', () => {
+                debugEnabled = !debugEnabled;
+                window.mrrflow?.debug(debugEnabled);
+                addLog(`🔧 Debug mode: ${debugEnabled ? 'ON' : 'OFF'}`);
+            });
+            
+            // Track scroll events
+            let maxScroll = 0;
+            window.addEventListener('scroll', () => {
+                const scrollPercent = Math.round(
+                    (window.scrollY / (document.body.scrollHeight - window.innerHeight)) * 100
+                );
+                
+                if (scrollPercent > maxScroll && scrollPercent % 25 === 0) {
+                    maxScroll = scrollPercent;
+                    window.mrrflow?.track('scroll_depth', { 
+                        percent: scrollPercent,
+                        page: 'test_page'
+                    });
+                    addLog(`📜 Scroll depth: ${scrollPercent}%`);
+                }
+            });
+            
+        }, 100);
+        
+        function addLog(message) {
+            const logEntries = document.getElementById('log-entries');
+            const entry = document.createElement('div');
+            entry.className = 'log-entry';
+            entry.textContent = `[${new Date().toLocaleTimeString()}] ${message}`;
+            logEntries.appendChild(entry);
+            
+            // Keep only last 20 entries
+            const entries = logEntries.children;
+            if (entries.length > 20) {
+                logEntries.removeChild(entries[0]);
+            }
+            
+            // Auto-scroll to bottom
+            logEntries.scrollTop = logEntries.scrollHeight;
+        }
+        
+        // Log page load
+        addLog('📄 Test page loaded');
+    </script>
+</body>
+</html>

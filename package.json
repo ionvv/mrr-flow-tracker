@@ -27,6 +27,9 @@
     "size:gzip": "gzip-size dist/tracker.min.js && echo 'Target: <2KB'",
     "analyze": "npm run build && npm run size",
     "dev": "node esbuild.config.js",
+    "watch": "node esbuild.watch.js",
+    "watch:lib": "tsc --watch",
+    "serve": "python3 -m http.server 8080", 
     "prepublishOnly": "npm run build"
   },
   "keywords": [
