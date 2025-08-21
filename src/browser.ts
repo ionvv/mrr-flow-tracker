@@ -1,4 +1,4 @@
-import { MRRFlowTracker } from './tracker.js';
+import { MRRFlowTracker } from './index.js';
 
 // Browser initialization
 (() => {
