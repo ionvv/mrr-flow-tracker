@@ -8,9 +8,13 @@ import type {
 } from './types';
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 
+declare const __VERSION__: string;
+
 export class MRRFlowTracker implements MRRFlowAPI {
   private _config: Required<TrackerConfig>;
   
+  private trackerVersion: string;
+
   private accountId: string;
   private sessionId: string;
   private eventQueue: TrackingEvent[] = [];
@@ -20,6 +24,8 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
+    this.trackerVersion = __VERSION__;
+
     // Set endpoint as environment variable
     this._config = {
       endpoint: import.meta.env.VITE_MRRFLOW_ENDPOINT || 'http://localhost:8084/e',
@@ -170,6 +176,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
   }
 
   private createEvent(type: string, properties: EventProperties = {}): TrackingEvent {
+    alert('event created')
     return {
       account_id: this.accountId,
       session_id: this.sessionId,
@@ -180,6 +187,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
         timestamp: Date.now(),
         user_agent: navigator.userAgent,
         device_info: this.deviceInfo,
+        mrrflow_version: this.trackerVersion,
         ...properties,
       },
     };

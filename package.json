@@ -6,7 +6,7 @@
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview",
-    "watch": "vite build --watch",
+    "watch": "vite build --watch --mode development",
     "build-check": "vite build --outDir temp-build && rm -rf temp-build",
     "test": "echo \"Error: no test specified\" && exit 1"
   },
