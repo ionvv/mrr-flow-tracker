@@ -1,3 +1,5 @@
+import { DeviceInfo } from "../utilities/device";
+
 export interface TrackerConfig {
   endpoint?: string;
   sessionDuration?: number;
@@ -21,8 +23,7 @@ export interface TrackingEvent {
     title: string;
     timestamp: number;
     user_agent: string;
-    screen_width: number;
-    screen_height: number;
+    device_info: DeviceInfo;
     [key: string]: any;
   };
 }

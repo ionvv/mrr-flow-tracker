@@ -6,6 +6,7 @@ import type {
   UTMParams,
   MRRFlowAPI 
 } from './types';
+import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 
 export class MRRFlowTracker implements MRRFlowAPI {
   private _config: Required<TrackerConfig>;
@@ -15,26 +16,28 @@ export class MRRFlowTracker implements MRRFlowAPI {
   private eventQueue: TrackingEvent[] = [];
   private batchTimer: number | null = null;
 
+  private deviceInfo: DeviceInfo;
+
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
     // Set endpoint as environment variable
     this._config = {
       endpoint: import.meta.env.VITE_MRRFLOW_ENDPOINT || 'http://localhost:8084/e',
       sessionDuration: 24 * 60 * 60 * 1000, // 24 hours
-      batchSize: 10,
+      batchSize: 1,
       batchTimeout: 5000,
       debug: false,
       autoTrack: true,
       ...config,
     };
 
-    console.log(' --- ', this._config)
-
     this.sessionId = this.getSessionId();
     
     if (this._config.autoTrack) {
       this.initAutoTracking();
     }
+
+    this.deviceInfo = getDeviceInfo()
   }
 
   private initAutoTracking(): void {
@@ -132,6 +135,9 @@ export class MRRFlowTracker implements MRRFlowAPI {
       if (value) utm[param] = value;
     });
 
+    const ref = params.get('ref');
+    if (ref) utm['ref'] = ref;
+
     return Object.keys(utm).length > 0 ? utm : null;
   }
 
@@ -173,8 +179,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
         title: document.title,
         timestamp: Date.now(),
         user_agent: navigator.userAgent,
-        screen_width: screen.width,
-        screen_height: screen.height,
+        device_info: this.deviceInfo,
         ...properties,
       },
     };
@@ -214,29 +219,6 @@ export class MRRFlowTracker implements MRRFlowAPI {
     this.sendEvents(events);
   }
 
-  // private sendEvents(events: TrackingEvent[]): void {
-  //   const payload = JSON.stringify(events);
-    
-  //   // Use sendBeacon if available (more reliable for page unload)
-  //   if (navigator.sendBeacon) {
-  //     const blob = new Blob([payload], { type: 'application/json' });
-  //     if (navigator.sendBeacon(this._config.endpoint, blob)) {
-  //       return;
-  //     }
-  //   }
-
-  //   // Fallback to fetch
-  //   fetch(this._config.endpoint, {
-  //     method: 'POST',
-  //     headers: { 'Content-Type': 'application/json' },
-  //     body: payload,
-  //     keepalive: true,
-  //   }).catch(err => {
-  //     if (this._config.debug) {
-  //       console.warn('MRRFlow: Failed to send events', err);
-  //     }
-  //   });
-  // }
   private sendEvents(events: TrackingEvent[]): void {
     const payload = JSON.stringify(events);
     
@@ -281,11 +263,14 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
   private handleClick(event: Event): void {
     const element = event.target as HTMLElement;
+    const mouseEvent = event as MouseEvent;
     const properties: EventProperties = {
       tag_name: element.tagName.toLowerCase(),
       text: element.textContent?.trim().substring(0, 100),
       class_name: element.className,
       id: element.id,
+      cursor_x: mouseEvent.clientX,
+      cursor_y: mouseEvent.clientY,
     };
 
     if (element instanceof HTMLAnchorElement && element.href) {
