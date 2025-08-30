@@ -8,6 +8,7 @@ import type {
 } from './types';
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 import { getReferrerInfo } from './utilities/referrer';
+import { isBot } from './utilities/device';
 
 declare const __VERSION__: string;
 
@@ -37,6 +38,11 @@ export class MRRFlowTracker implements MRRFlowAPI {
       autoTrack: true,
       ...config,
     };
+
+    // Check for bot-like behavior
+    if (navigator.webdriver || !navigator.cookieEnabled || isBot(navigator.userAgent)) {
+      return;
+    }
 
     this.sessionId = this.getSessionId();
     

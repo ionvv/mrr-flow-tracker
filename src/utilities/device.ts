@@ -45,3 +45,32 @@ export function getDeviceInfo(): DeviceInfo {
     language: navigator.language,
   };
 }
+
+const BOT_PATTERNS = [
+  /bot/i,
+  /crawler/i,
+  /spider/i,
+  /scraper/i,
+  /facebookexternalhit/i,
+  /WhatsApp/i,
+  /Slack/i,
+  /TwitterBot/i,
+  /LinkedInBot/i,
+  /GoogleBot/i,
+  /BingBot/i,
+  /YandexBot/i,
+  /Applebot/i,
+  /Semrush/i,
+  /AhrefsBot/i,
+  /DataForSeo/i,
+  /Chrome-Lighthouse/i,
+  /HeadlessChrome/i,
+  /PhantomJS/i,
+  /Puppeteer/i,
+  /Playwright/i
+];
+
+export function isBot(userAgent: string): boolean {
+  if (!userAgent) return true;
+  return BOT_PATTERNS.some(pattern => pattern.test(userAgent));
+}
