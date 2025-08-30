@@ -7,6 +7,7 @@ import type {
   MRRFlowAPI 
 } from './types';
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
+import { getReferrerInfo } from './utilities/referrer';
 
 declare const __VERSION__: string;
 
@@ -147,33 +148,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
     return Object.keys(utm).length > 0 ? utm : null;
   }
 
-  private getReferrerInfo(): ReferrerInfo {
-    const referrer = document.referrer;
-    if (!referrer) return { type: 'direct' };
-
-    const currentDomain = window.location.hostname;
-    const referrerDomain = new URL(referrer).hostname;
-
-    if (referrerDomain === currentDomain) {
-      return { type: 'internal', url: referrer };
-    }
-
-    // Common search engines
-    const searchEngines: Record<string, string> = {
-      'google.com': 'google',
-      'bing.com': 'bing',
-      'duckduckgo.com': 'duckduckgo',
-      'yahoo.com': 'yahoo',
-    };
-
-    for (const [domain, engine] of Object.entries(searchEngines)) {
-      if (referrerDomain.includes(domain)) {
-        return { type: 'search', engine, url: referrer };
-      }
-    }
-
-    return { type: 'referral', domain: referrerDomain, url: referrer };
-  }
+  
 
   private createEvent(type: string, properties: EventProperties = {}): TrackingEvent {
     return {
@@ -261,7 +236,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
   private trackPageview(): void {
     const properties = {
-      referrer: this.getReferrerInfo(),
+      referrer: getReferrerInfo(),
       utm: this.getUTMParams(),
     };
 

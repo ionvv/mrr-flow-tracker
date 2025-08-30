@@ -43,6 +43,14 @@ export interface UTMParams {
   content?: string;
 }
 
+export interface ReferrerInfo {
+  type: 'direct' | 'internal' | 'search' | 'referral';
+  engine?: string;
+  medium?: 'organic' | 'cpc';
+  domain?: string;
+  url?: string;
+}
+
 export interface MRRFlowAPI {
   /**
    * Track a custom event
