@@ -33,7 +33,7 @@ export function getReferrerInfo(): ReferrerInfo {
 
   for (const [domain, platform] of Object.entries(socialPlatforms)) {
     if (referrerDomain.includes(domain)) {
-      const medium = this.detectSocialMedium(referrer, platform);
+      const medium = detectSocialMedium(referrer, platform);
       return { 
         type: 'social', 
         platform, 
@@ -55,7 +55,7 @@ export function getReferrerInfo(): ReferrerInfo {
 
   for (const [domain, engine] of Object.entries(searchEngines)) {
     if (referrerDomain.includes(domain)) {
-      const medium = this.detectSearchMedium(referrer);
+      const medium = detectSearchMedium(referrer);
       return { 
         type: 'search', 
         engine, 
