@@ -256,7 +256,6 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
     const dataProps = getDataAttributes(element);
     
-console.log(dataProps)
     const properties: EventProperties = {
       tag_name: element.tagName.toLowerCase(),
       text: element.textContent?.trim().substring(0, 100),
