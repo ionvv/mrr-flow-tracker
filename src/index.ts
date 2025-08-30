@@ -176,7 +176,6 @@ export class MRRFlowTracker implements MRRFlowAPI {
   }
 
   private createEvent(type: string, properties: EventProperties = {}): TrackingEvent {
-    alert('event created')
     return {
       account_id: this.accountId,
       session_id: this.sessionId,
@@ -285,6 +284,14 @@ export class MRRFlowTracker implements MRRFlowAPI {
       properties.href = element.href;
       properties.link_type = element.href.startsWith('mailto:') ? 'email' : 
                             element.href.startsWith('tel:') ? 'phone' : 'external';
+    } else {
+      // Find the closest parent anchor element
+      const closestAnchor = element.closest('a');
+      if (closestAnchor && closestAnchor.href) {
+        properties.href = closestAnchor.href;
+        properties.link_type = closestAnchor.href.startsWith('mailto:') ? 'email' : 
+                              closestAnchor.href.startsWith('tel:') ? 'phone' : 'external';
+      }
     }
 
     if (element instanceof HTMLButtonElement || 
