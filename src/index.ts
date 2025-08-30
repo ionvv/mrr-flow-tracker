@@ -9,6 +9,7 @@ import type {
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 import { getReferrerInfo } from './utilities/referrer';
 import { isBot } from './utilities/device';
+import { getDataAttributes } from './utilities/element';
 
 declare const __VERSION__: string;
 
@@ -252,6 +253,10 @@ export class MRRFlowTracker implements MRRFlowAPI {
   private handleClick(event: Event): void {
     const element = event.target as HTMLElement;
     const mouseEvent = event as MouseEvent;
+
+    const dataProps = getDataAttributes(element);
+    
+console.log(dataProps)
     const properties: EventProperties = {
       tag_name: element.tagName.toLowerCase(),
       text: element.textContent?.trim().substring(0, 100),
@@ -259,6 +264,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
       id: element.id,
       cursor_x: mouseEvent.clientX,
       cursor_y: mouseEvent.clientY,
+      data_props: dataProps,
     };
 
     if (element instanceof HTMLAnchorElement && element.href) {
