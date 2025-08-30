@@ -28,13 +28,6 @@ export interface TrackingEvent {
   };
 }
 
-export interface ReferrerInfo {
-  type: 'direct' | 'internal' | 'search' | 'referral';
-  engine?: string;
-  domain?: string;
-  url?: string;
-}
-
 export interface UTMParams {
   source?: string;
   medium?: string;
@@ -44,9 +37,10 @@ export interface UTMParams {
 }
 
 export interface ReferrerInfo {
-  type: 'direct' | 'internal' | 'search' | 'referral';
+  type: 'direct' | 'internal' | 'search' | 'social' | 'email' | 'referral';
   engine?: string;
-  medium?: 'organic' | 'cpc';
+  platform?: string;
+  medium?: 'organic' | 'cpc' | 'social' | 'email';
   domain?: string;
   url?: string;
 }
