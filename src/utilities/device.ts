@@ -68,7 +68,26 @@ const BOT_PATTERNS = [
   /headlesschrome/i,
   /phantomjs/i,
   /puppeteer/i,
-  /playwright/i
+  /playwright/i,
+
+  // AI Bots
+  /chatgpt-user/i,        // OpenAI ChatGPT
+  /gptbot/i,              // OpenAI GPT crawler
+  /claudebot/i,           // Anthropic Claude
+  /claude-web/i,          // Anthropic web scraper
+  /bard/i,                // Google Bard (legacy)
+  /gemini/i,              // Google Gemini
+  /perplexitybot/i,       // Perplexity AI
+  /cohere-ai/i,           // Cohere
+  /anthropic-ai/i,        // Anthropic generic
+  /ai2bot/i,              // Allen Institute
+  /omgili/i,              // Omgili bot (used by AI training)
+  /bytespider/i,          // ByteDance (TikTok) AI crawler
+  /meta-externalagent/i,  // Meta AI
+  /facebookbot/i,         // Facebook AI crawler
+  /diffbot/i,             // Diffbot
+  /peer39_crawler/i,      // Peer39 AI
+  /youbot/i,              // You.com
 ];
 
 export function isBot(userAgent: string): boolean {

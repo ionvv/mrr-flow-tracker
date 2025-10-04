@@ -1,4 +1,3 @@
-import { platform } from "os";
 import { ReferrerInfo } from "../types";
 
 export function getReferrerInfo(): ReferrerInfo {
@@ -119,10 +118,24 @@ export function detectSearchMedium(referrer: string): 'organic' | 'cpc' {
   const utmMedium = urlParams.get('utm_medium');
   const utmSource = urlParams.get('utm_source');
   
+  // Check for Google Ads click ID
+  const gclid = urlParams.get('gclid');
+  if (gclid) {
+    return 'cpc';
+  }
+  
+  // Check for other Google Ads parameters
+  const gadSource = urlParams.get('gad_source');
+  const gadCampaignId = urlParams.get('gad_campaignid');
+  if (gadSource || gadCampaignId) {
+    return 'cpc';
+  }
+  
   if (utmMedium === 'cpc' || utmSource?.includes('ads')) {
     return 'cpc';
   }
 
+  // Referrer-based patterns (less reliable for Google Ads)
   const paidPatterns = [
     'googleadservices.com',
     'doubleclick.net',

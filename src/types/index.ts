@@ -13,27 +13,33 @@ export interface EventProperties {
   [key: string]: any;
 }
 
-export interface TrackingEvent {
-  account_id: string;
-  session_id: string;
-  event_type: string;
-  email_hash?: string;
-  properties: {
-    url: string;
-    title: string;
-    timestamp: number;
-    user_agent: string;
-    device_info: DeviceInfo;
-    [key: string]: any;
-  };
-}
-
 export interface UTMParams {
   source?: string;
   medium?: string;
   campaign?: string;
   term?: string;
   content?: string;
+}
+
+export interface URLProperties {
+  url: string;
+  path?: string;
+  params?: UTMParams;
+  hash?: string;
+}
+
+export interface TrackingEvent {
+  account_id: string;
+  session_id: string;
+  event_type: string;
+  email_hash?: string;
+  properties: {
+    url: URLProperties;
+    title: string;
+    timestamp: number;
+    device_info: DeviceInfo;
+    [key: string]: any;
+  };
 }
 
 export interface ReferrerInfo {

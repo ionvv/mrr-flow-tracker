@@ -2,14 +2,13 @@ import type {
   TrackerConfig, 
   TrackingEvent, 
   EventProperties, 
-  ReferrerInfo, 
-  UTMParams,
   MRRFlowAPI 
 } from './types';
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 import { getReferrerInfo } from './utilities/referrer';
 import { isBot } from './utilities/device';
 import { getDataAttributes } from './utilities/element';
+import { getUTMParams, sanitizeUrl } from './utilities/url';
 
 declare const __VERSION__: string;
 
@@ -24,6 +23,8 @@ export class MRRFlowTracker implements MRRFlowAPI {
   private batchTimer: number | null = null;
 
   private deviceInfo: DeviceInfo;
+  
+  public pageStartTime: number;
 
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
@@ -32,10 +33,10 @@ export class MRRFlowTracker implements MRRFlowAPI {
     // Set endpoint as environment variable
     this._config = {
       endpoint: import.meta.env.VITE_MRRFLOW_ENDPOINT || 'http://localhost:8084/e',
+      debug: import.meta.env.VITE_MRRFLOW_DEBUG || false,
       sessionDuration: 24 * 60 * 60 * 1000, // 24 hours
       batchSize: 1,
       batchTimeout: 5000,
-      debug: false,
       autoTrack: true,
       ...config,
     };
@@ -46,12 +47,12 @@ export class MRRFlowTracker implements MRRFlowAPI {
     }
 
     this.sessionId = this.getSessionId();
+
+    this.deviceInfo = getDeviceInfo();
     
     if (this._config.autoTrack) {
       this.initAutoTracking();
     }
-
-    this.deviceInfo = getDeviceInfo()
   }
 
   private initAutoTracking(): void {
@@ -69,7 +70,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
     });
 
     // Flush events before page unload
-    window.addEventListener('beforeunload', this.flush.bind(this));
+    window.addEventListener('beforeunload', this.trackPageExit.bind(this));
     window.addEventListener('pagehide', this.flush.bind(this));
 
     // Track page visibility changes
@@ -140,33 +141,15 @@ export class MRRFlowTracker implements MRRFlowAPI {
     return hashArray.map(b => b.toString(16).padStart(2, '0')).join('');
   }
 
-  private getUTMParams(): UTMParams | null {
-    const params = new URLSearchParams(window.location.search);
-    const utm: UTMParams = {};
-    
-    (['source', 'medium', 'campaign', 'term', 'content'] as const).forEach(param => {
-      const value = params.get(`utm_${param}`);
-      if (value) utm[param] = value;
-    });
-
-    const ref = params.get('ref');
-    if (ref) utm['ref'] = ref;
-
-    return Object.keys(utm).length > 0 ? utm : null;
-  }
-
-  
-
   private createEvent(type: string, properties: EventProperties = {}): TrackingEvent {
     return {
       account_id: this.accountId,
       session_id: this.sessionId,
       event_type: type,
       properties: {
-        url: window.location.href,
+        url: sanitizeUrl(window.location.href),
         title: document.title,
         timestamp: Date.now(),
-        user_agent: navigator.userAgent,
         device_info: this.deviceInfo,
         mrrflow_version: this.trackerVersion,
         ...properties,
@@ -244,10 +227,26 @@ export class MRRFlowTracker implements MRRFlowAPI {
   private trackPageview(): void {
     const properties = {
       referrer: getReferrerInfo(),
-      utm: this.getUTMParams(),
+      utm: getUTMParams(window.location.href),
     };
+    
+    this.pageStartTime = Date.now();
 
     this.queueEvent(this.createEvent('pageview', properties));
+  }
+
+  private trackPageExit(): void {
+    const duration = this.pageStartTime ? Math.floor((Date.now() - this.pageStartTime) / 1000) : -1; // seconds
+    const properties = {
+      url: window.location.href,
+      path: window.location.pathname,
+      scroll_depth: Math.round((window.scrollY / document.documentElement.scrollHeight) * 100),
+      duration
+    };
+
+    this.queueEvent(this.createEvent('page_exit', properties));
+
+    this.flush();
   }
 
   private handleClick(event: Event): void {
