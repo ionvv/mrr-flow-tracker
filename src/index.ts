@@ -267,15 +267,19 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
     if (element instanceof HTMLAnchorElement && element.href) {
       properties.href = element.href;
+      const isInternal = element.href.startsWith(window.location.origin);
       properties.link_type = element.href.startsWith('mailto:') ? 'email' : 
-                            element.href.startsWith('tel:') ? 'phone' : 'external';
+                       element.href.startsWith('tel:') ? 'phone' : 
+                       isInternal ? 'internal' : 'external';
     } else {
       // Find the closest parent anchor element
       const closestAnchor = element.closest('a');
       if (closestAnchor && closestAnchor.href) {
         properties.href = closestAnchor.href;
+        const isInternal = closestAnchor.href.startsWith(window.location.origin);
         properties.link_type = closestAnchor.href.startsWith('mailto:') ? 'email' : 
-                              closestAnchor.href.startsWith('tel:') ? 'phone' : 'external';
+                       closestAnchor.href.startsWith('tel:') ? 'phone' : 
+                       isInternal ? 'internal' : 'external';
       }
     }
 
