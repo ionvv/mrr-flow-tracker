@@ -238,8 +238,6 @@ export class MRRFlowTracker implements MRRFlowAPI {
   private trackPageExit(): void {
     const duration = this.pageStartTime ? Math.floor((Date.now() - this.pageStartTime) / 1000) : -1; // seconds
     const properties = {
-      url: window.location.href,
-      path: window.location.pathname,
       scroll_depth: Math.round((window.scrollY / document.documentElement.scrollHeight) * 100),
       duration
     };
