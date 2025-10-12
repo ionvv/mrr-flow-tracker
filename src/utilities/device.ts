@@ -15,23 +15,23 @@ export function getDeviceInfo(): DeviceInfo {
   
   // OS Detection
   let os = 'unknown';
-  if (ua.includes('Windows')) os = 'windows';
-  else if (ua.includes('Mac OS')) os = 'macos';
-  else if (ua.includes('Linux')) os = 'linux';
-  else if (ua.includes('Android')) os = 'android';
-  else if (ua.includes('iOS') || ua.includes('iPhone') || ua.includes('iPad')) os = 'ios';
+  if (/android/i.test(ua)) os = 'android';
+  else if (/iphone|ipad|ipod/i.test(ua)) os = 'ios';
+  else if (/mac os/i.test(ua)) os = 'macos';
+  else if (/windows/i.test(ua)) os = 'windows';
+  else if (/linux/i.test(ua)) os = 'linux';
 
-  // Browser Detection
+  // Browser Detection (Chrome check needs to be more specific)
   let browser = 'unknown';
-  if (ua.includes('Chrome') && !ua.includes('Edg')) browser = 'chrome';
-  else if (ua.includes('Safari') && !ua.includes('Chrome')) browser = 'safari';
-  else if (ua.includes('Firefox')) browser = 'firefox';
-  else if (ua.includes('Edg')) browser = 'edge';
+  if (/edg/i.test(ua)) browser = 'edge';
+  else if (/chrome/i.test(ua)) browser = 'chrome';
+  else if (/firefox/i.test(ua)) browser = 'firefox';
+  else if (/safari/i.test(ua)) browser = 'safari';
 
   // Device Type Detection
   let device_type: 'desktop' | 'mobile' | 'tablet' = 'desktop';
-  if (/Mobile|Android|iPhone/.test(ua)) device_type = 'mobile';
-  else if (/iPad|Tablet/.test(ua)) device_type = 'tablet';
+  if (/ipad|tablet/i.test(ua)) device_type = 'tablet';
+  else if (/mobile|android|iphone/i.test(ua)) device_type = 'mobile';
 
   return {
     os,
