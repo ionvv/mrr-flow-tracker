@@ -26,6 +26,8 @@ export class MRRFlowTracker implements MRRFlowAPI {
   
   public pageStartTime: number;
 
+  private hasTrackedExit: boolean = false;
+
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
     this.trackerVersion = __VERSION__;
@@ -230,12 +232,16 @@ export class MRRFlowTracker implements MRRFlowAPI {
       utm: getUTMParams(window.location.href),
     };
     
+    this.hasTrackedExit = false;
     this.pageStartTime = Date.now();
 
     this.queueEvent(this.createEvent('pageview', properties));
   }
 
   private trackPageExit(): void {
+    if (this.hasTrackedExit) return; // Prevent duplicate tracking
+    this.hasTrackedExit = true;
+    
     const duration = this.pageStartTime ? Math.floor((Date.now() - this.pageStartTime) / 1000) : -1; // seconds
     const properties = {
       scroll_depth: Math.round((window.scrollY / document.documentElement.scrollHeight) * 100),
