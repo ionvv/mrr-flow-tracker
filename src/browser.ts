@@ -4,20 +4,55 @@ import { MRRFlowTracker } from './index.js';
 (() => {
   'use strict';
 
-  // Get account ID from script tag
-  const script = document.currentScript as HTMLScriptElement || 
-                 document.querySelector('script[data-account-id]') as HTMLScriptElement;
+  const GLOBAL_NAME = 'mrrflow';
+  const INIT_LOCK = '__mrrflowInitLock';
+  const INIT_PROMISE = '__mrrflowInitPromise';
   
-  const accountId = script?.getAttribute('data-account-id');
-  
-  if (!accountId) {
-    console.warn('MRRFlow: No account ID found. Add data-account-id to script tag.');
+  const win = window as any;
+
+  // Return existing instance
+  if (win[GLOBAL_NAME]) {
     return;
   }
 
-  // Initialize tracker
-  const tracker = new MRRFlowTracker(accountId);
-  
-  // Expose global API
-  (window as any).mrrflow = tracker;
+  // Return existing initialization promise
+  if (win[INIT_PROMISE]) {
+    return;
+  }
+
+  // Create initialization promise
+  win[INIT_PROMISE] = new Promise((resolve, reject) => {
+    try {
+      // Double-check after promise creation (race condition protection)
+      if (win[GLOBAL_NAME]) {
+        resolve(win[GLOBAL_NAME]);
+        return;
+      }
+
+      const script = document.currentScript as HTMLScriptElement || 
+                     document.querySelector('script[data-account-id]') as HTMLScriptElement;
+      
+      const accountId = script?.getAttribute('data-account-id');
+      
+      if (!accountId) {
+        reject(new Error('MRRFlow: No account ID found'));
+        return;
+      }
+
+      // Initialize tracker
+      const tracker = new MRRFlowTracker(accountId);
+      
+      // Expose global API
+      win[GLOBAL_NAME] = tracker;
+      
+      // Resolve with tracker instance
+      resolve(tracker);
+      
+    } catch (error) {
+      reject(error);
+    }
+  }).finally(() => {
+    // Clean up init promise after completion
+    delete win[INIT_PROMISE];
+  });
 })();
