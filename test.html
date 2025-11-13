@@ -60,11 +60,22 @@
     <h2>Test Actions</h2>
     
     <button class="button" id="cta-button" data-goal="cta_clicked">Call to Action</button>
+    <br/>
     <button class="button" id="pricing-button" data-goal="pricing_viewed">View Pricing</button>
+    <br/>
     <button class="button" id="feature-button" data-goal="feature_interest">Learn More</button>
+    <br/>
     <a href="#lorem" class="link" id="feature-link">Test Link</a>
-    <a href="https://vrinceanu.net" class="link" id="external-link">Test External Link</a>
-    
+    <br/>
+    <a href="#https://vrinceanu.net" class="link" data-goal="link_click" data-goal-source="test_page" data-goal-button="external-link" id="external-link">Test External Link</a>
+    <br/>
+    <br/>
+    <a href="tel:+40750482892" class="link" id="phone-link">Test Phone Link</a>
+    <br/>
+    <br/>
+    <a href="#" class="link" id="faq-button">FAQ LINK</a>
+    <br/>
+    <br/>
     <div class="form-group">
         <h3>Email Identification Test</h3>
         <input type="email" id="email-input" placeholder="test@example.com">
@@ -95,7 +106,7 @@
     <script data-account-id="550e8400-e29b-41d4-a716-446655440001" src="./dist/index.js"></script>
     <!-- <script data-account-id="afd012f0-30ff-4489-90d3-fdf5045fcf3e" src="./dist/index.js"></script> -->
     
-    <script>
+    <!-- <script>    
         // Wait for tracker to load
         setTimeout(() => {
             // Enable debug mode
@@ -213,6 +224,6 @@
         
         // Log page load
         addLog('📄 Test page loaded');
-    </script>
+    </script> -->
 </body>
 </html>

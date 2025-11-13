@@ -31,7 +31,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
   
   private maxScrollDepth: number = 0;
   private scrollMilestones: Set<number> = new Set();
-  private scrollDepthMilestones: Set<number> = new Set([30, 50, 75, 90, 100]);
+  private scrollDepthMilestones: Set<number> = new Set([100, 90, 75, 50, 30]);
 
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
