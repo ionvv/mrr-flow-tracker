@@ -28,6 +28,10 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
   private hasTrackedExit: boolean = false;
   private internalNavigationTimeout: number | null = null;
+  
+  private maxScrollDepth: number = 0;
+  private scrollMilestones: Set<number> = new Set();
+  private scrollDepthMilestones: Set<number> = new Set([30, 50, 75, 90, 100]);
 
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
@@ -69,6 +73,11 @@ export class MRRFlowTracker implements MRRFlowAPI {
     });
     
     document.addEventListener('submit', this.handleFormSubmit.bind(this), { 
+      passive: true 
+    });
+
+    // Add scroll tracking
+    window.addEventListener('scroll', this.handleScroll.bind(this), { 
       passive: true 
     });
 
@@ -235,6 +244,10 @@ export class MRRFlowTracker implements MRRFlowAPI {
     
     this.hasTrackedExit = false;
     this.pageStartTime = Date.now();
+    
+    // Reset scroll tracking for new page
+    this.maxScrollDepth = 0;
+    this.scrollMilestones.clear();
 
     this.queueEvent(this.createEvent('pageview', properties));
   }
@@ -283,6 +296,36 @@ export class MRRFlowTracker implements MRRFlowAPI {
     this.queueEvent(this.createEvent('page_exit', properties));
 
     this.flush();
+  }
+
+  private handleScroll(): void {
+    // Calculate current scroll depth percentage
+    const scrollTop = window.scrollY;
+    const documentHeight = document.documentElement.scrollHeight - window.innerHeight;
+    const scrollPercentage = Math.round((scrollTop / documentHeight) * 100);
+    
+    // Update maximum scroll depth
+    if (scrollPercentage > this.maxScrollDepth) {
+      this.maxScrollDepth = scrollPercentage;
+    }
+    
+    // Check if we've passed any 10% milestone
+    for (let milestone of this.scrollDepthMilestones) {
+      if (scrollPercentage >= milestone && !this.scrollMilestones.has(milestone)) {
+        this.scrollMilestones.add(milestone);
+        
+        const properties = {
+          scroll_depth: milestone,
+          max_scroll_depth: this.maxScrollDepth
+        };
+        
+        this.queueEvent(this.createEvent('scroll_depth', properties));
+        
+        if (this._config.debug) {
+          console.log(`MRRFlow: Scroll milestone reached: ${milestone}%`);
+        }
+      }
+    }
   }
 
   private handleClick(event: Event): void {
