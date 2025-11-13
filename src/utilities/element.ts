@@ -22,3 +22,16 @@ export function getDataAttributes(element: HTMLElement) {
   
   return dataProps;
 }
+
+export function getDataGoalAttributes(element: HTMLElement) {
+  const dataProps: Record<string, string> = {};
+  
+  for (let i = 0; i < element.attributes.length; i++) {
+    const attr = element.attributes[i];
+    if (attr.name.startsWith('data-goal')) {
+      dataProps[attr.name] = attr.value;
+    }
+  }
+  
+  return dataProps;
+}

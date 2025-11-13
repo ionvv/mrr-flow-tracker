@@ -7,7 +7,7 @@ import type {
 import { getDeviceInfo, type DeviceInfo } from './utilities/device';
 import { getReferrerInfo } from './utilities/referrer';
 import { isBot } from './utilities/device';
-import { getDataAttributes } from './utilities/element';
+import { getDataGoalAttributes } from './utilities/element';
 import { getUTMParams, sanitizeUrl } from './utilities/url';
 
 declare const __VERSION__: string;
@@ -27,6 +27,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
   public pageStartTime: number = 0;
 
   private hasTrackedExit: boolean = false;
+  private internalNavigationTimeout: number | null = null;
 
   constructor(accountId: string, config: TrackerConfig = {}) {
     this.accountId = accountId;
@@ -238,8 +239,39 @@ export class MRRFlowTracker implements MRRFlowAPI {
     this.queueEvent(this.createEvent('pageview', properties));
   }
 
+  private setInternalNavigationFlag(): void {
+    // Clear any existing timeout
+    if (this.internalNavigationTimeout) {
+      clearTimeout(this.internalNavigationTimeout);
+    }
+    
+    // Set a short timeout to clear the flag (in case navigation doesn't happen)
+    this.internalNavigationTimeout = window.setTimeout(() => {
+      this.internalNavigationTimeout = null;
+    }, 1000);
+  }
+
+  private isInternalNavigation(): boolean {
+    // Check if we recently clicked an internal link
+    if (this.internalNavigationTimeout) {
+      return true;
+    }
+    
+    // Also check if referrer is from same origin
+    const referrer = document.referrer;
+    return referrer && referrer.startsWith(window.location.origin);
+  }
+
   private trackPageExit(): void {
     if (this.hasTrackedExit) return; // Prevent duplicate tracking
+    
+    // Check if this is internal navigation (same origin)
+    // For SPAs, beforeunload fires on route changes, but we shouldn't track as exit
+    const isInternalNavigation = this.isInternalNavigation();
+    if (isInternalNavigation) {
+      return;
+    }
+    
     this.hasTrackedExit = true;
     
     const duration = this.pageStartTime ? Math.floor((Date.now() - this.pageStartTime) / 1000) : -1; // seconds
@@ -257,12 +289,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
     const element = event.target as HTMLElement;
     const mouseEvent = event as MouseEvent;
 
-    const allDataProps = getDataAttributes(element);
-    
-    const dataProps = Object.fromEntries(
-      Object.entries(allDataProps)
-        .filter(([key]) => key.startsWith('data-goal'))
-    );
+    const dataProps = getDataGoalAttributes(element);
     
     const properties: EventProperties = {
       tag_name: element.tagName.toLowerCase(),
@@ -271,22 +298,29 @@ export class MRRFlowTracker implements MRRFlowAPI {
       data_props: dataProps,
     };
 
+    let isInternalLink = false;
+
     if (element instanceof HTMLAnchorElement && element.href) {
       properties.href = element.href;
-      const isInternal = element.href.startsWith(window.location.origin);
+      isInternalLink = element.href.startsWith(window.location.origin);
       properties.link_type = element.href.startsWith('mailto:') ? 'email' : 
                        element.href.startsWith('tel:') ? 'phone' : 
-                       isInternal ? 'internal' : 'external';
+                       isInternalLink ? 'internal' : 'external';
     } else {
       // Find the closest parent anchor element
       const closestAnchor = element.closest('a');
       if (closestAnchor && closestAnchor.href) {
         properties.href = closestAnchor.href;
-        const isInternal = closestAnchor.href.startsWith(window.location.origin);
+        isInternalLink = closestAnchor.href.startsWith(window.location.origin);
         properties.link_type = closestAnchor.href.startsWith('mailto:') ? 'email' : 
                        closestAnchor.href.startsWith('tel:') ? 'phone' : 
-                       isInternal ? 'internal' : 'external';
+                       isInternalLink ? 'internal' : 'external';
       }
+    }
+
+    // If this is an internal link, set a flag to prevent exit tracking
+    if (isInternalLink) {
+      this.setInternalNavigationFlag();
     }
 
     if (element instanceof HTMLButtonElement || 
