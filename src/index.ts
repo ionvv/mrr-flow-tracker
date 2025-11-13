@@ -257,15 +257,17 @@ export class MRRFlowTracker implements MRRFlowAPI {
     const element = event.target as HTMLElement;
     const mouseEvent = event as MouseEvent;
 
-    const dataProps = getDataAttributes(element);
+    const allDataProps = getDataAttributes(element);
+    
+    const dataProps = Object.fromEntries(
+      Object.entries(allDataProps)
+        .filter(([key]) => key.startsWith('data-goal'))
+    );
     
     const properties: EventProperties = {
       tag_name: element.tagName.toLowerCase(),
       text: element.textContent?.trim().substring(0, 100),
-      class_name: element.className,
       id: element.id,
-      cursor_x: mouseEvent.clientX,
-      cursor_y: mouseEvent.clientY,
       data_props: dataProps,
     };
 
