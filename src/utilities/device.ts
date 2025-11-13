@@ -90,22 +90,110 @@ const BOT_PATTERNS = [
   /youbot/i,              // You.com
 ];
 
-export function isBot(userAgent: string): boolean {
-  if (!userAgent) return true;
-
-  const ua = navigator.userAgent.toLowerCase();
-  const isBot = BOT_PATTERNS.some(pattern => pattern.test(ua));
-
-  if (isBot) return true;
+function calculateBotProbability() {
+  let probability = 0;
+  const ua = navigator.userAgent;
   
+  // INSTANT BOT FLAGS (100% probability)
+  // Empty user agent
+  if (!ua || ua.length === 0) {
+    return 1.0;
+  }
+  
+  // Known bot patterns in user agent
+  if (BOT_PATTERNS.some(pattern => pattern.test(ua))) {
+    return 1.0;
+  }
+  
+  // CRITICAL FLAGS (high weight)
+  // Viewport larger than screen - physically impossible
+  if (window.innerWidth > screen.width || window.innerHeight > screen.height) {
+    probability += 0.50;
+  }
+  
+  // Webdriver flag - explicit automation
+  if (navigator.webdriver === true) {
+    probability += 0.45;
+  }
+  
+  // Missing core browser features (from your existing code)
   try {
-    return !(
+    const hasCoreFeatures = (
       'cookieEnabled' in navigator &&
       'hardwareConcurrency' in navigator &&
       'maxTouchPoints' in navigator &&
-      !!(window as any).WebGLRenderingContext
+      !!window.WebGLRenderingContext
     );
+    
+    if (!hasCoreFeatures) {
+      probability += 0.40;
+    }
   } catch {
-    return false;
+    probability += 0.40; // Error checking features = likely bot
   }
+  
+  // HIGH CONFIDENCE FLAGS (medium weight)
+  // Timezone is exactly "UTC"
+  try {
+    const tz = Intl.DateTimeFormat().resolvedOptions().timeZone;
+    if (tz === 'UTC') {
+      probability += 0.20;
+    }
+  } catch {
+    probability += 0.15; // Can't get timezone = suspicious
+  }
+  
+  // Chrome user agent but missing chrome object
+  if (!window.chrome && /Chrome/.test(ua)) {
+    probability += 0.25;
+  }
+  
+  // Desktop with no plugins (headless)
+  if (navigator.plugins && navigator.plugins.length === 0 && 
+      !/Mobile|Android|iPhone/.test(ua)) {
+    probability += 0.20;
+  }
+  
+  // MEDIUM CONFIDENCE FLAGS (low weight)
+  // Common bot screen dimensions
+  const botScreens = ['800x600', '1024x768', '1280x720', '1920x1080'];
+  const screenSize = `${screen.width}x${screen.height}`;
+  if (botScreens.includes(screenSize)) {
+    probability += 0.10;
+  }
+  
+  // Single language (en-US only)
+  if (navigator.languages && navigator.languages.length === 1) {
+    probability += 0.08;
+  }
+  
+  // Missing permissions API
+  if (!navigator.permissions) {
+    probability += 0.07;
+  }
+  
+  // Missing connection API on non-mobile
+  if (!navigator.connection && !navigator.mozConnection && !navigator.webkitConnection && 
+      !/Mobile/.test(ua)) {
+    probability += 0.07;
+  }
+  
+  // Mobile UA but no battery API
+  if (ua.match(/Mobile|Android|iPhone/) && !navigator.getBattery) {
+    probability += 0.08;
+  }
+  
+  // Missing cookieEnabled
+  if (!('cookieEnabled' in navigator)) {
+    probability += 0.08;
+  }
+  
+  // Cap at 1.0 (100%)
+  return Math.min(probability, 1.0);
+}
+
+export function isBot(userAgent: string): boolean {
+  const probability = calculateBotProbability();
+
+  return probability >= 0.60;
 }

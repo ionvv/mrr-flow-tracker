@@ -24,7 +24,7 @@ export class MRRFlowTracker implements MRRFlowAPI {
 
   private deviceInfo: DeviceInfo;
   
-  public pageStartTime: number;
+  public pageStartTime: number = 0;
 
   private hasTrackedExit: boolean = false;
 
@@ -43,14 +43,14 @@ export class MRRFlowTracker implements MRRFlowAPI {
       ...config,
     };
 
-    // Check for bot-like behavior
-    if (navigator.webdriver || !navigator.cookieEnabled || isBot(navigator.userAgent)) {
-      return;
-    }
-
     this.sessionId = this.getSessionId();
 
     this.deviceInfo = getDeviceInfo();
+
+    // Check for bot-like behavior
+    if (isBot(navigator.userAgent)) {
+      return;
+    }
     
     if (this._config.autoTrack) {
       this.initAutoTracking();
